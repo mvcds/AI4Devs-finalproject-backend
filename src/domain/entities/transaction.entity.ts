@@ -27,14 +27,19 @@ export class Transaction {
   @IsNotEmpty()
   date: Date
 
-  @Column({ type: 'uuid', nullable: true })
-  @IsOptional()
-  @IsUUID()
-  categoryId?: string
+  @ManyToOne(() => Category, category => category.transactions, { 
+    nullable: false,
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    eager: false
+  })
+  @JoinColumn({ name: 'categoryId', referencedColumnName: 'id' })
+  category: Category
 
-  @ManyToOne(() => Category, category => category.transactions, { nullable: true })
-  @JoinColumn({ name: 'categoryId' })
-  category?: Category
+  @Column({ type: 'uuid', name: 'categoryId' })
+  @IsUUID()
+  @IsNotEmpty()
+  categoryId: string
 
   @Column({ type: 'uuid' })
   @IsUUID()
@@ -66,7 +71,7 @@ export class Transaction {
     amount: number,
     date: Date,
     userId: string,
-    categoryId?: string,
+    categoryId: string,
     notes?: string,
     frequency?: FrequencyEnum
   ) {

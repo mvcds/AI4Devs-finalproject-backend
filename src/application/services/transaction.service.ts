@@ -129,21 +129,43 @@ export class TransactionService {
       throw new NotFoundException(`Transaction with ID ${id} not found`)
     }
 
-    // Amount validation is no longer needed since type is inferred from amount
-
     // Validate category if provided
     if (updateTransactionDto.categoryId) {
       await this.validateCategory(updateTransactionDto.categoryId)
     }
 
-    // Update transaction
-    Object.assign(transaction, updateTransactionDto)
-    
-    if (updateTransactionDto.date) {
-      transaction.date = new Date(updateTransactionDto.date)
+    // Use update method to ensure all fields are properly updated
+    const updateData: any = {}
+    if (updateTransactionDto.description !== undefined) {
+      updateData.description = updateTransactionDto.description
     }
-
-    const updatedTransaction = await this.transactionRepository.save(transaction)
+    if (updateTransactionDto.amount !== undefined) {
+      updateData.amount = updateTransactionDto.amount
+    }
+    if (updateTransactionDto.date !== undefined) {
+      updateData.date = new Date(updateTransactionDto.date)
+    }
+    if (updateTransactionDto.categoryId !== undefined) {
+      updateData.categoryId = updateTransactionDto.categoryId
+    }
+    if (updateTransactionDto.notes !== undefined) {
+      updateData.notes = updateTransactionDto.notes
+    }
+    if (updateTransactionDto.frequency !== undefined) {
+      updateData.frequency = updateTransactionDto.frequency
+    }
+    
+    await this.transactionRepository.update(id, updateData)
+    
+    const updatedTransaction = await this.transactionRepository.findOne({
+      where: { id },
+      relations: ['category'],
+    })
+    
+    if (!updatedTransaction) {
+      throw new NotFoundException(`Transaction with ID ${id} not found after update`)
+    }
+    
     return this.mapToResponseDto(updatedTransaction)
   }
 
@@ -214,31 +236,20 @@ export class TransactionService {
   }
 
   private mapToResponseDto(transaction: Transaction): TransactionResponseDto {
-    const dto = new TransactionResponseDto()
-    Object.assign(dto, {
-      id: transaction.id,
-      description: transaction.description,
-      amount: transaction.amount,
-      date: transaction.date,
-      categoryId: transaction.categoryId,
-      categoryName: transaction.category?.name,
-      notes: transaction.notes,
-      frequency: transaction.frequency,
-      userId: transaction.userId,
-      createdAt: transaction.createdAt,
-      updatedAt: transaction.updatedAt,
-    })
+    const { Frequency, FrequencyEnum } = require('../../domain/value-objects/frequency.value-object')
 
-    // Calculate monthly equivalent for all transactions (they are all recurring)
-    if (transaction.frequency) {
-      const { Frequency, FrequencyEnum } = require('../../domain/value-objects/frequency.value-object')
-      // Ensure the frequency is a valid enum value
-      const frequencyValue = Object.values(FrequencyEnum).includes(transaction.frequency) 
-        ? transaction.frequency 
-        : FrequencyEnum.MONTH // fallback to month if invalid
-      const frequency = new Frequency(frequencyValue)
-      dto.monthlyEquivalent = frequency.getMonthlyEquivalentDisplay(transaction.amount)
-    }
+    const dto = new TransactionResponseDto()
+
+    const frequencyValue = Object.values(FrequencyEnum).includes(transaction.frequency) 
+      ? transaction.frequency 
+      : FrequencyEnum.MONTH
+
+    const frequency = new Frequency(frequencyValue)
+
+    Object.assign(dto, transaction, {
+      categoryName: transaction.category?.name,
+      monthlyEquivalent:  frequency.getMonthlyEquivalentDisplay(transaction.amount)
+    })
 
     return dto
   }
