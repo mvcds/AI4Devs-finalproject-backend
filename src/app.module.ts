@@ -1,10 +1,32 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { AppController } from './app.controller'
+import { AppService } from './app.service'
+import { TransactionController } from './application/controllers/transaction.controller'
+import { CategoryController } from './application/controllers/category.controller'
+import { TransactionService } from './application/services/transaction.service'
+import { CategoryService } from './application/services/category.service'
+import { MockUserService } from './domain/services/mock-user.service'
+import { Transaction } from './domain/entities/transaction.entity'
+import { Category } from './domain/entities/category.entity'
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
+    }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      url: process.env.DATABASE_URL,
+      entities: [Transaction, Category],
+      synchronize: process.env.NODE_ENV === 'development', // Only in development
+      logging: process.env.NODE_ENV === 'development',
+    }),
+    TypeOrmModule.forFeature([Transaction, Category]),
+  ],
+  controllers: [AppController, TransactionController, CategoryController],
+  providers: [AppService, TransactionService, CategoryService, MockUserService],
 })
 export class AppModule {}
