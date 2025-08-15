@@ -10,6 +10,8 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   ValidationPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam } from '@nestjs/swagger'
 import { TransactionService } from '../services/transaction.service'
@@ -138,10 +140,11 @@ export class TransactionController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a transaction' })
   @ApiParam({ name: 'id', description: 'Transaction ID' })
   @ApiResponse({
-    status: 200,
+    status: 204,
     description: 'Transaction deleted successfully',
   })
   @ApiResponse({
@@ -149,6 +152,6 @@ export class TransactionController {
     description: 'Transaction not found',
   })
   async remove(@Param('id') id: string): Promise<void> {
-    return this.transactionService.remove(id)
+    await this.transactionService.remove(id)
   }
 }

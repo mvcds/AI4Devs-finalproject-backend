@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   ValidationPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger'
 import { CategoryService } from '../services/category.service'
@@ -87,10 +89,11 @@ export class CategoryController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a category' })
   @ApiParam({ name: 'id', description: 'Category ID' })
   @ApiResponse({
-    status: 200,
+    status: 204,
     description: 'Category deleted successfully',
   })
   @ApiResponse({
@@ -98,6 +101,6 @@ export class CategoryController {
     description: 'Category not found',
   })
   async remove(@Param('id') id: string): Promise<void> {
-    return this.categoryService.remove(id)
+    await this.categoryService.remove(id)
   }
 }
