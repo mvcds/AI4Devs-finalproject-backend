@@ -44,47 +44,95 @@ async function bootstrap() {
   console.log(`📚 API Documentation available at: http://localhost:${port}/api/docs`)
 
   // Run seed data on startup
+  console.log('🚀 Starting seed process...')
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`)
+  console.log(`🗄️ Database URL: ${process.env.DATABASE_URL ? 'Set' : 'Not set'}`)
   await runSeedOnStartup(app)
+  console.log('🎯 Seed process completed')
 }
 
 async function runSeedOnStartup(app: any) {
   try {
+    // Wait for database to be fully ready
+    await waitForDatabase(app)
+    
     const dataSource = app.get(DataSource)
     
-    // Check if categories already exist
-    const categoryRepository = dataSource.getRepository(Category)
-    const transactionRepository = dataSource.getRepository(Transaction)
-    const existingCategories = await categoryRepository.count()
-    const existingTransactions = await transactionRepository.count()
+    // Add a simple lock to prevent multiple seed runs
+    if ((global as any).__seedRunning) {
+      console.log('⏳ Seed already running, skipping...')
+      return
+    }
+    (global as any).__seedRunning = true
     
-    if (existingCategories === 0) {
-      console.log('🌱 No categories found, running seed...')
-      await runSeed(dataSource)
-      console.log('✅ Seed completed successfully')
-    } else {
-      console.log(`📊 Database already contains ${existingCategories} categories`)
+    try {
+      // Check if seeding has already been completed by looking for a specific transaction
+      const transactionRepository = dataSource.getRepository(Transaction)
+      const seedCompletedTransaction = await transactionRepository.findOne({
+        where: { description: 'Monthly Salary' }
+      })
       
-      // Clear existing transactions to fix frequency issues
-      if (existingTransactions > 0) {
-        console.log(`🗑️ Clearing ${existingTransactions} existing transactions to fix frequency issues...`)
-        await transactionRepository.clear()
-        console.log('🔄 Recreating transactions with proper frequency values...')
-        await runSeed(dataSource)
-        console.log('✅ Transactions recreated successfully')
-      } else {
-        console.log('📊 No existing transactions, skipping transaction seed')
+      if (seedCompletedTransaction) {
+        console.log('✅ Seed has already been completed, skipping...')
+        return
       }
+      
+      // Check if categories already exist
+      const categoryRepository = dataSource.getRepository(Category)
+      const existingCategories = await categoryRepository.count()
+      const existingTransactions = await transactionRepository.count()
+      
+      if (existingCategories === 0) {
+        console.log('🌱 No categories found, running seed...')
+        await runSeed(dataSource)
+        console.log('✅ Seed completed successfully')
+      } else {
+        console.log(`📊 Database already contains ${existingCategories} categories`)
+        
+        // Only recreate transactions if they exist and need frequency fixes
+        if (existingTransactions > 0) {
+          console.log(`🗑️ Clearing ${existingTransactions} existing transactions to fix frequency issues...`)
+          await transactionRepository.clear()
+          console.log('🔄 Recreating transactions with proper frequency values...')
+          await runSeedTransactionsOnly(dataSource)
+          console.log('✅ Transactions recreated successfully')
+        } else {
+          console.log('📊 No existing transactions, skipping transaction seed')
+        }
+      }
+    } finally {
+      // Release the lock
+      (global as any).__seedRunning = false
     }
   } catch (error) {
-    console.error('❌ Failed to run seed on startup:', error)
+    console.error('❌ Failed to run seed on startup:', error) as any
+    // Don't exit the process, just log the error
+    (global as any).__seedRunning = false
   }
 }
 
-async function runSeed(dataSource: DataSource) {
+async function waitForDatabase(app: any, maxRetries = 30, delay = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const dataSource = app.get(DataSource)
+      await dataSource.query('SELECT 1')
+      console.log('✅ Database connection established')
+      return
+    } catch (error) {
+      if (i === maxRetries - 1) {
+        throw new Error(`Failed to connect to database after ${maxRetries} attempts`)
+      }
+      console.log(`⏳ Waiting for database connection... (attempt ${i + 1}/${maxRetries})`)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+}
+
+async function runSeed(dataSource: DataSource): Promise<void> {
   const categoryRepository = dataSource.getRepository(Category)
   const transactionRepository = dataSource.getRepository(Transaction)
 
-  // Seed categories
+  // Seed categories - check for existing ones by name
   const categories = [
     { name: 'Salary', flow: 'income', color: '#10B981', description: 'Regular employment income' },
     { name: 'Freelance', flow: 'income', color: '#3B82F6', description: 'Freelance and contract work' },
@@ -100,14 +148,32 @@ async function runSeed(dataSource: DataSource) {
   ]
 
   for (const categoryData of categories) {
-    const category = new Category(
-      categoryData.name,
-      categoryData.flow as any,
-      categoryData.color,
-      categoryData.description
-    )
-    await categoryRepository.save(category)
+    // Check if category already exists by name
+    const existingCategory = await categoryRepository.findOne({ 
+      where: { name: categoryData.name } 
+    })
+    
+    if (!existingCategory) {
+      const category = new Category(
+        categoryData.name,
+        categoryData.flow as any,
+        categoryData.color,
+        categoryData.description
+      )
+      await categoryRepository.save(category)
+      console.log(`✅ Created category: ${categoryData.name}`)
+    } else {
+      console.log(`⏭️ Category already exists: ${categoryData.name}`)
+    }
   }
+
+  // Seed transactions
+  await runSeedTransactionsOnly(dataSource)
+}
+
+async function runSeedTransactionsOnly(dataSource: DataSource): Promise<boolean> {
+  const categoryRepository = dataSource.getRepository(Category)
+  const transactionRepository = dataSource.getRepository(Transaction)
 
   // Seed transactions
   const salaryCategory = await categoryRepository.findOne({ where: { name: 'Salary' } })
@@ -158,7 +224,11 @@ async function runSeed(dataSource: DataSource) {
       )
       await transactionRepository.save(transaction)
     }
+    
+    return true
   }
+  
+  return false
 }
 
 bootstrap()
