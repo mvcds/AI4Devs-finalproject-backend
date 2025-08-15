@@ -1,7 +1,6 @@
 import { DataSource } from 'typeorm'
 import { Transaction } from './domain/entities/transaction.entity'
 import { Category } from './domain/entities/category.entity'
-import { randomUUID } from 'crypto'
 
 async function seed() {
   const dataSource = new DataSource({
@@ -62,7 +61,7 @@ async function seed() {
       const utilitiesCategory = await categoryRepository.findOne({ where: { name: 'Utilities' } })
 
       if (salaryCategory && groceriesCategory && utilitiesCategory) {
-        const mockUserId = randomUUID()
+        const mockUserId = '0a390afb-d082-47be-9cfa-c3d4eebd553f'
         const transactions = [
           {
             description: 'Monthly Salary',

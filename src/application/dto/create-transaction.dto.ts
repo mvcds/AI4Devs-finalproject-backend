@@ -1,5 +1,6 @@
-import { IsString, IsNumber, IsDateString, IsOptional, IsUUID, Min, MaxLength } from 'class-validator'
+import { IsString, IsNumber, IsDateString, IsOptional, IsUUID, Min, MaxLength, IsEnum, IsNotEmpty } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { FrequencyEnum } from '../../domain/value-objects/frequency.value-object'
 
 export class CreateTransactionDto {
   @ApiProperty({
@@ -47,4 +48,15 @@ export class CreateTransactionDto {
   @IsString()
   @MaxLength(1000)
   notes?: string
+
+  @ApiProperty({
+    description: 'Transaction frequency (all transactions are recurring)',
+    example: 'month',
+    enum: FrequencyEnum,
+  })
+  @IsEnum(FrequencyEnum)
+  @IsNotEmpty()
+  frequency: FrequencyEnum
+
+
 }

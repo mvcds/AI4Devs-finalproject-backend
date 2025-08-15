@@ -34,6 +34,7 @@ export class TransactionService {
       userId,
       createTransactionDto.categoryId,
       createTransactionDto.notes,
+      createTransactionDto.frequency,
     )
 
     const savedTransaction = await this.transactionRepository.save(transaction)
@@ -211,10 +212,23 @@ export class TransactionService {
       categoryId: transaction.categoryId,
       categoryName: transaction.category?.name,
       notes: transaction.notes,
+      frequency: transaction.frequency,
       userId: transaction.userId,
       createdAt: transaction.createdAt,
       updatedAt: transaction.updatedAt,
     })
+
+    // Calculate monthly equivalent for all transactions (they are all recurring)
+    if (transaction.frequency) {
+      const { Frequency, FrequencyEnum } = require('../../domain/value-objects/frequency.value-object')
+      // Ensure the frequency is a valid enum value
+      const frequencyValue = Object.values(FrequencyEnum).includes(transaction.frequency) 
+        ? transaction.frequency 
+        : FrequencyEnum.MONTH // fallback to month if invalid
+      const frequency = new Frequency(frequencyValue)
+      dto.monthlyEquivalent = frequency.getMonthlyEquivalentDisplay(transaction.amount)
+    }
+
     return dto
   }
 }

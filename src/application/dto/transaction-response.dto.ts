@@ -54,6 +54,22 @@ export class TransactionResponseDto {
   @Expose()
   notes?: string
 
+  @ApiPropertyOptional({
+    description: 'Transaction frequency',
+    example: 'month',
+  })
+  @Expose()
+  frequency?: string
+
+
+
+  @ApiPropertyOptional({
+    description: 'Monthly equivalent amount for recurring transactions',
+    example: '500.00 per month',
+  })
+  @Expose()
+  monthlyEquivalent?: string
+
   @ApiProperty({
     description: 'User ID',
     example: '550e8400-e29b-41d4-a716-446655440000',

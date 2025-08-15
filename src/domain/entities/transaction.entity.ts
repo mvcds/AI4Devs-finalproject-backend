@@ -1,8 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-import { IsString, IsOptional, IsUUID, IsDate, IsNotEmpty } from 'class-validator'
+import { IsString, IsOptional, IsUUID, IsDate, IsNotEmpty, IsEnum } from 'class-validator'
 import { Category } from './category.entity'
 import { Money } from '../value-objects/money.value-object'
 import { TransactionType } from '../value-objects/transaction-type.value-object'
+import { FrequencyEnum } from '../value-objects/frequency.value-object'
 
 @Entity('transactions')
 export class Transaction {
@@ -45,6 +46,13 @@ export class Transaction {
   @IsString()
   notes?: string
 
+  @Column({ type: 'enum', enum: FrequencyEnum, default: FrequencyEnum.MONTH })
+  @IsNotEmpty()
+  @IsEnum(FrequencyEnum)
+  frequency: FrequencyEnum
+
+
+
   @CreateDateColumn()
   @IsDate()
   createdAt: Date
@@ -59,7 +67,8 @@ export class Transaction {
     date: Date,
     userId: string,
     categoryId?: string,
-    notes?: string
+    notes?: string,
+    frequency?: FrequencyEnum
   ) {
     this.description = description
     this.amount = amount
@@ -67,6 +76,7 @@ export class Transaction {
     this.userId = userId
     this.categoryId = categoryId
     this.notes = notes
+    this.frequency = frequency || FrequencyEnum.MONTH
   }
 
   getMoney(): Money {
@@ -108,6 +118,12 @@ export class Transaction {
   updateNotes(notes: string): void {
     this.notes = notes
   }
+
+  updateFrequency(frequency: FrequencyEnum): void {
+    this.frequency = frequency
+  }
+
+
 
   belongsToUser(userId: string): boolean {
     return this.userId === userId

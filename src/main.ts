@@ -5,6 +5,7 @@ import { AppModule } from './app.module'
 import { DataSource } from 'typeorm'
 import { Transaction } from './domain/entities/transaction.entity'
 import { Category } from './domain/entities/category.entity'
+import { FrequencyEnum } from './domain/value-objects/frequency.value-object'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -52,14 +53,27 @@ async function runSeedOnStartup(app: any) {
     
     // Check if categories already exist
     const categoryRepository = dataSource.getRepository(Category)
+    const transactionRepository = dataSource.getRepository(Transaction)
     const existingCategories = await categoryRepository.count()
+    const existingTransactions = await transactionRepository.count()
     
     if (existingCategories === 0) {
       console.log('🌱 No categories found, running seed...')
       await runSeed(dataSource)
       console.log('✅ Seed completed successfully')
     } else {
-      console.log(`📊 Database already contains ${existingCategories} categories, skipping seed`)
+      console.log(`📊 Database already contains ${existingCategories} categories`)
+      
+      // Clear existing transactions to fix frequency issues
+      if (existingTransactions > 0) {
+        console.log(`🗑️ Clearing ${existingTransactions} existing transactions to fix frequency issues...`)
+        await transactionRepository.clear()
+        console.log('🔄 Recreating transactions with proper frequency values...')
+        await runSeed(dataSource)
+        console.log('✅ Transactions recreated successfully')
+      } else {
+        console.log('📊 No existing transactions, skipping transaction seed')
+      }
     }
   } catch (error) {
     console.error('❌ Failed to run seed on startup:', error)
@@ -69,7 +83,6 @@ async function runSeedOnStartup(app: any) {
 async function runSeed(dataSource: DataSource) {
   const categoryRepository = dataSource.getRepository(Category)
   const transactionRepository = dataSource.getRepository(Transaction)
-  const { randomUUID } = await import('crypto')
 
   // Seed categories
   const categories = [
@@ -102,7 +115,7 @@ async function runSeed(dataSource: DataSource) {
   const utilitiesCategory = await categoryRepository.findOne({ where: { name: 'Utilities' } })
 
   if (salaryCategory && groceriesCategory && utilitiesCategory) {
-    const mockUserId = randomUUID()
+    const mockUserId = '0a390afb-d082-47be-9cfa-c3d4eebd553f'
     const transactions = [
       {
         description: 'Monthly Salary',
@@ -110,7 +123,8 @@ async function runSeed(dataSource: DataSource) {
         date: new Date('2024-01-15'),
         categoryId: salaryCategory.id,
         notes: 'January 2024 salary',
-        userId: mockUserId
+        userId: mockUserId,
+        frequency: FrequencyEnum.MONTH
       },
       {
         description: 'Weekly Groceries',
@@ -118,7 +132,8 @@ async function runSeed(dataSource: DataSource) {
         date: new Date('2024-01-14'),
         categoryId: groceriesCategory.id,
         notes: 'Weekly food shopping',
-        userId: mockUserId
+        userId: mockUserId,
+        frequency: FrequencyEnum.WEEK
       },
       {
         description: 'Electricity Bill',
@@ -126,7 +141,8 @@ async function runSeed(dataSource: DataSource) {
         date: new Date('2024-01-13'),
         categoryId: utilitiesCategory.id,
         notes: 'December electricity bill',
-        userId: mockUserId
+        userId: mockUserId,
+        frequency: FrequencyEnum.TWO_MONTH
       }
     ]
 
@@ -137,7 +153,8 @@ async function runSeed(dataSource: DataSource) {
         transactionData.date,
         transactionData.userId,
         transactionData.categoryId,
-        transactionData.notes
+        transactionData.notes,
+        transactionData.frequency
       )
       await transactionRepository.save(transaction)
     }
