@@ -47,6 +47,7 @@ export class TransactionController {
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 10)' })
   @ApiQuery({ name: 'type', required: false, enum: ['income', 'expense'], description: 'Filter by transaction type' })
   @ApiQuery({ name: 'categoryId', required: false, type: String, description: 'Filter by category ID' })
+  @ApiQuery({ name: 'frequency', required: false, enum: ['daily', 'week', 'fortnight', 'month', '2-month', '3-month', 'quarter', 'half', 'year', '2-year'], description: 'Filter by transaction frequency' })
   @ApiQuery({ name: 'startDate', required: false, type: String, description: 'Filter by start date (YYYY-MM-DD)' })
   @ApiQuery({ name: 'endDate', required: false, type: String, description: 'Filter by end date (YYYY-MM-DD)' })
   @ApiResponse({
@@ -70,10 +71,11 @@ export class TransactionController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('type') type?: string,
     @Query('categoryId') categoryId?: string,
+    @Query('frequency') frequency?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.transactionService.findAll(page, limit, type, categoryId, startDate, endDate)
+    return this.transactionService.findAll(page, limit, type, categoryId, frequency, startDate, endDate)
   }
 
   @Get('summary')

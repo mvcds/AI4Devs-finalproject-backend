@@ -46,6 +46,7 @@ export class TransactionService {
     limit: number = 10,
     type?: string,
     categoryId?: string,
+    frequency?: string,
     startDate?: string,
     endDate?: string,
   ): Promise<{ transactions: TransactionResponseDto[]; total: number; page: number; limit: number }> {
@@ -66,6 +67,10 @@ export class TransactionService {
 
     if (categoryId) {
       queryBuilder.andWhere('transaction.categoryId = :categoryId', { categoryId })
+    }
+
+    if (frequency) {
+      queryBuilder.andWhere('transaction.frequency = :frequency', { frequency })
     }
 
     if (startDate) {
