@@ -38,7 +38,12 @@ export class TransactionService {
     )
 
     const savedTransaction = await this.transactionRepository.save(transaction)
-    return this.mapToResponseDto(savedTransaction)
+    // Reload with category relation to get categoryName
+    const transactionWithCategory = await this.transactionRepository.findOne({
+      where: { id: savedTransaction.id },
+      relations: ['category'],
+    })
+    return this.mapToResponseDto(transactionWithCategory!)
   }
 
   async findAll(
@@ -117,6 +122,7 @@ export class TransactionService {
     const userId = this.mockUserService.getCurrentUserId()
     const transaction = await this.transactionRepository.findOne({
       where: { id, userId },
+      relations: ['category'],
     })
 
     if (!transaction) {

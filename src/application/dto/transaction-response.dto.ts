@@ -31,7 +31,7 @@ export class TransactionResponseDto {
   })
   @Expose()
   @Transform(({ value }) => value.toISOString().split('T')[0])
-  date: Date
+  date: string
 
   @ApiPropertyOptional({
     description: 'Category ID',
