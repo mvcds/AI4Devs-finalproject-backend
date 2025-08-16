@@ -8,7 +8,6 @@ beforeAll(async () => {
   // Set test environment
   process.env.NODE_ENV = 'test'
   process.env.DATABASE_URL = 'postgresql://user:password@localhost:5432/salary_tracker_test'
-  process.env.REDIS_URL = 'redis://localhost:6379'
 })
 
 // Global test teardown

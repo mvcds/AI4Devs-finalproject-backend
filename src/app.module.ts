@@ -21,8 +21,8 @@ import { Category } from './domain/entities/category.entity'
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: [Transaction, Category],
-      synchronize: process.env.NODE_ENV === 'development', // Only in development
-      logging: process.env.NODE_ENV === 'development',
+      synchronize: process.env.NODE_ENV !== 'production', // Enable in development and test
+      logging: process.env.NODE_ENV !== 'production',
     }),
     TypeOrmModule.forFeature([Transaction, Category]),
   ],
