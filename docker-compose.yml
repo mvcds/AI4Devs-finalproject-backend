@@ -30,7 +30,7 @@ services:
       - '${BACKEND_PORT:-3000}:${BACKEND_PORT:-3000}'
     environment:
       - NODE_ENV=${NODE_ENV:-development}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-salary_tracker}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-salary_tracker}
       - BACKEND_PORT=${BACKEND_PORT:-3000}
     volumes:
       - .:/app
