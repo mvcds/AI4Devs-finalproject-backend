@@ -8,6 +8,6 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 
-EXPOSE ${PORT:-3000}
+EXPOSE ${BACKEND_PORT:-3000}
 
-CMD ["npm", "run", "start:dev"]
+CMD ["sh", "-c", "npm run build && npm run start:prod"]
