@@ -36,6 +36,11 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api/docs', app, document)
+  
+  // Expose OpenAPI JSON specification
+  app.use('/api-json', (req, res) => {
+    res.json(document)
+  })
 
   const port = process.env.BACKEND_PORT || 3000
   await app.listen(port)

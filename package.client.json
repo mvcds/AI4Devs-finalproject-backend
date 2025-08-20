@@ -1,0 +1,36 @@
+{
+  "name": "ai4devs-api-client",
+  "version": "1.0.0",
+  "description": "TypeScript API client for AI4Devs Personal Finance Manager",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "*.js",
+    "*.d.ts",
+    "*.js.map",
+    "models/**/*",
+    "apis/**/*"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.package.json",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "api",
+    "client",
+    "typescript",
+    "openapi",
+    "finance",
+    "personal-finance"
+  ],
+  "author": "AI4Devs Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ai4devs/personal-finance-manager.git",
+    "directory": "backend"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

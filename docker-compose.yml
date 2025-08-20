@@ -26,16 +26,21 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: backend
     ports:
       - '${BACKEND_PORT:-3000}:${BACKEND_PORT:-3000}'
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-salary_tracker}
       - BACKEND_PORT=${BACKEND_PORT:-3000}
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-salary_tracker}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
     volumes:
       - .:/app
       - /app/node_modules
-    command: npm run start:dev
+    command: sh -c "npm run start:dev"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${BACKEND_PORT:-3000}/health"]
       interval: 30s

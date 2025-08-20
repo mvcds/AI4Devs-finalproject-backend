@@ -20,7 +20,17 @@
     "db:migrate": "npm run typeorm migration:run",
     "db:generate": "npm run typeorm migration:generate",
     "db:create": "npm run typeorm schema:sync",
-    "db:seed": "ts-node src/seed.ts"
+    "db:seed": "ts-node src/seed.ts",
+    "swagger:generate": "npm run start --watch=false & sleep 5 && curl http://localhost:${BACKEND_PORT:-3000}/api-json > openapi.json && pkill -f 'npm run start'",
+    "codegen:client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o src/generated",
+    "codegen:package": "npm run codegen:client && npm run build:client && npm run prepare:client-package",
+    "build:client": "rm -rf dist && tsc -p tsconfig.package.json",
+    "prepare:client-package": "cp package.client.json dist/package.json && node -e \"const pkg=require('./dist/package.json'); pkg.scripts.build='echo \\\"Already built\\\"'; require('fs').writeFileSync('./dist/package.json', JSON.stringify(pkg, null, 2));\"",
+    "unpublish:client": "cd dist && npm unpublish ai4devs-api-client@$(node -e \"console.log(require('../package.client.json').version)\") --force || true",
+    "republish:client": "npm run codegen:package && cd dist && npm publish",
+    "register:publish": "npm run unpublish:client && npm run republish:client",
+    "register:unpublish": "cd dist && npm unpublish",
+    "publish:client": "npm run unpublish:client && npm run republish:client"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -45,6 +55,7 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
+    "@openapitools/openapi-generator-cli": "^2.22.0",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.7",
     "@types/express": "^5.0.0",
