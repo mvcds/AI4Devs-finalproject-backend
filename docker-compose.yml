@@ -6,10 +6,11 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
       - POSTGRES_DB=${POSTGRES_DB:-salary_tracker}
       - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_VOLUME=${POSTGRES_VOLUME:-postgres_data}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ${POSTGRES_VOLUME:-postgres_data}:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-salary_tracker}"]
       interval: 10s
@@ -59,3 +60,4 @@ services:
 
 volumes:
   postgres_data:
+  postgres_test_data:
