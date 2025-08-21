@@ -43,7 +43,7 @@ async function bootstrap() {
   })
 
   const port = process.env.BACKEND_PORT || 3000
-  await app.listen(port)
+  await app.listen(port, '0.0.0.0')
   
   console.log(`🚀 Application is running on: http://localhost:${port}`)
   console.log(`📚 API Documentation available at: http://localhost:${port}/api/docs`)

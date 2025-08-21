@@ -43,7 +43,7 @@ services:
       - /app/node_modules
     command: sh -c "npm run start:dev"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${BACKEND_PORT:-3000}/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://0.0.0.0:${BACKEND_PORT:-3000}/health"]
       interval: 30s
       timeout: 10s
       retries: 3

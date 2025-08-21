@@ -7,6 +7,7 @@ import { CreateTransactionDto } from '../dto/create-transaction.dto'
 import { UpdateTransactionDto } from '../dto/update-transaction.dto'
 import { TransactionResponseDto } from '../dto/transaction-response.dto'
 import { MockUserService } from '../../domain/services/mock-user.service'
+import { Frequency, FrequencyEnum } from '../../domain/value-objects/frequency.value-object'
 
 
 @Injectable()
@@ -207,8 +208,6 @@ export class TransactionService {
     
     // Calculate frequency-normalized amounts
     for (const transaction of transactions) {
-      const { Frequency, FrequencyEnum } = require('../../domain/value-objects/frequency.value-object')
-      
       const frequencyValue = Object.values(FrequencyEnum).includes(transaction.frequency) 
         ? transaction.frequency 
         : FrequencyEnum.MONTH
@@ -246,8 +245,6 @@ export class TransactionService {
   }
 
   private mapToResponseDto(transaction: Transaction): TransactionResponseDto {
-    const { Frequency, FrequencyEnum } = require('../../domain/value-objects/frequency.value-object')
-
     const dto = new TransactionResponseDto()
 
     const frequencyValue = Object.values(FrequencyEnum).includes(transaction.frequency) 
