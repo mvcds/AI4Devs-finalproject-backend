@@ -3,6 +3,12 @@ import { Transaction } from './domain/entities/transaction.entity'
 import { Category } from './domain/entities/category.entity'
 
 async function seed() {
+  const nodeEnv = process.env.NODE_ENV || 'development'
+  if (nodeEnv !== 'development') {
+    console.log(`Seeding skipped for environment: ${nodeEnv}`)
+    return
+  }
+
   const dataSource = new DataSource({
     type: 'postgres',
     url: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/salary_tracker',

@@ -48,12 +48,17 @@ async function bootstrap() {
   console.log(`🚀 Application is running on: http://localhost:${port}`)
   console.log(`📚 API Documentation available at: http://localhost:${port}/api/docs`)
 
-  // Run seed data on startup
-  console.log('🚀 Starting seed process...')
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`🗄️ Database URL: ${process.env.DATABASE_URL ? 'Set' : 'Not set'}`)
-  await runSeedOnStartup(app)
-  console.log('🎯 Seed process completed')
+  // Run seed data on startup (only in development)
+  const nodeEnv = process.env.NODE_ENV || 'development'
+  if (nodeEnv === 'development') {
+    console.log('🚀 Starting seed process...')
+    console.log(`📊 Environment: ${nodeEnv}`)
+    console.log(`🗄️ Database URL: ${process.env.DATABASE_URL ? 'Set' : 'Not set'}`)
+    await runSeedOnStartup(app)
+    console.log('🎯 Seed process completed')
+  } else {
+    console.log(`⏭️ Skipping seed process for environment: ${nodeEnv}`)
+  }
 }
 
 async function runSeedOnStartup(app: any) {

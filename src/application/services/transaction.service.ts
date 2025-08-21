@@ -199,27 +199,37 @@ export class TransactionService {
       queryBuilder.andWhere('transaction.date <= :endDate', { endDate })
     }
 
-    const [incomeResult, expenseResult, countResult] = await Promise.all([
-      queryBuilder
-        .select('SUM(transaction.amount)', 'total')
-        .where('transaction.amount > 0')
-        .getRawOne(),
-      queryBuilder
-        .select('SUM(transaction.amount)', 'total')
-        .where('transaction.amount <= 0')
-        .getRawOne(),
-      queryBuilder.getCount(),
-    ])
+    // Get all transactions for this user and date range to calculate frequency-normalized amounts
+    const transactions = await queryBuilder.getMany()
+    
+    let totalIncome = 0
+    let totalExpenses = 0
+    
+    // Calculate frequency-normalized amounts
+    for (const transaction of transactions) {
+      const { Frequency, FrequencyEnum } = require('../../domain/value-objects/frequency.value-object')
+      
+      const frequencyValue = Object.values(FrequencyEnum).includes(transaction.frequency) 
+        ? transaction.frequency 
+        : FrequencyEnum.MONTH
+      
+      const frequency = new Frequency(frequencyValue)
+      const monthlyEquivalent = frequency.calculateMonthlyEquivalent(transaction.amount)
+      
+      if (monthlyEquivalent > 0) {
+        totalIncome += monthlyEquivalent
+      } else {
+        totalExpenses += Math.abs(monthlyEquivalent)
+      }
+    }
 
-    const totalIncome = parseFloat(incomeResult?.total || '0')
-    const totalExpenses = parseFloat(expenseResult?.total || '0')
-    const netAmount = totalIncome + totalExpenses // Expenses are negative
+    const netAmount = totalIncome - totalExpenses
 
     return {
-      totalIncome,
-      totalExpenses: Math.abs(totalExpenses),
-      netAmount,
-      transactionCount: countResult,
+      totalIncome: Math.round(totalIncome * 100) / 100, // Round to 2 decimal places
+      totalExpenses: Math.round(totalExpenses * 100) / 100,
+      netAmount: Math.round(netAmount * 100) / 100,
+      transactionCount: transactions.length,
     }
   }
 
