@@ -30,8 +30,7 @@ export class TransactionService {
 
     const transaction = new Transaction(
       createTransactionDto.description,
-      createTransactionDto.amount,
-      new Date(createTransactionDto.date),
+      createTransactionDto.expression,
       userId,
       createTransactionDto.categoryId,
       createTransactionDto.notes,
@@ -53,8 +52,6 @@ export class TransactionService {
     type?: string,
     categoryId?: string,
     frequency?: string,
-    startDate?: string,
-    endDate?: string,
   ): Promise<{ transactions: TransactionResponseDto[]; total: number; page: number; limit: number }> {
     const userId = this.mockUserService.getCurrentUserId()
     const queryBuilder = this.transactionRepository
@@ -79,19 +76,10 @@ export class TransactionService {
       queryBuilder.andWhere('transaction.frequency = :frequency', { frequency })
     }
 
-    if (startDate) {
-      queryBuilder.andWhere('transaction.date >= :startDate', { startDate })
-    }
-
-    if (endDate) {
-      queryBuilder.andWhere('transaction.date <= :endDate', { endDate })
-    }
-
     // Apply pagination
     const offset = (page - 1) * limit
     queryBuilder
-      .orderBy('transaction.date', 'DESC')
-      .addOrderBy('transaction.createdAt', 'DESC')
+      .orderBy('transaction.createdAt', 'DESC')
       .skip(offset)
       .take(limit)
 
@@ -140,11 +128,8 @@ export class TransactionService {
     if (updateTransactionDto.description !== undefined) {
       updateData.description = updateTransactionDto.description
     }
-    if (updateTransactionDto.amount !== undefined) {
-      updateData.amount = updateTransactionDto.amount
-    }
-    if (updateTransactionDto.date !== undefined) {
-      updateData.date = new Date(updateTransactionDto.date)
+    if (updateTransactionDto.expression !== undefined) {
+      updateData.expression = updateTransactionDto.expression
     }
     if (updateTransactionDto.categoryId !== undefined) {
       updateData.categoryId = updateTransactionDto.categoryId
@@ -183,22 +168,11 @@ export class TransactionService {
     await this.transactionRepository.remove(transaction)
   }
 
-  async getSummary(
-    startDate?: string,
-    endDate?: string,
-  ): Promise<{ totalIncome: number; totalExpenses: number; netAmount: number; transactionCount: number }> {
+  async getSummary(): Promise<{ totalIncome: number; totalExpenses: number; netAmount: number; transactionCount: number }> {
     const userId = this.mockUserService.getCurrentUserId()
     const queryBuilder = this.transactionRepository
       .createQueryBuilder('transaction')
       .where('transaction.userId = :userId', { userId })
-
-    if (startDate) {
-      queryBuilder.andWhere('transaction.date >= :startDate', { startDate })
-    }
-
-    if (endDate) {
-      queryBuilder.andWhere('transaction.date <= :endDate', { endDate })
-    }
 
     // Get all transactions for this user and date range to calculate frequency-normalized amounts
     const transactions = await queryBuilder.getMany()
@@ -213,7 +187,7 @@ export class TransactionService {
         : FrequencyEnum.MONTH
       
       const frequency = new Frequency(frequencyValue)
-      const monthlyEquivalent = frequency.calculateMonthlyEquivalent(transaction.amount)
+      const monthlyEquivalent = frequency.calculateMonthlyEquivalent(transaction.amount.amount)
       
       if (monthlyEquivalent > 0) {
         totalIncome += monthlyEquivalent
@@ -255,7 +229,8 @@ export class TransactionService {
 
     Object.assign(dto, transaction, {
       categoryName: transaction.category?.name,
-      monthlyEquivalent:  frequency.getMonthlyEquivalentDisplay(transaction.amount)
+      amount: transaction.amount.amount,
+      monthlyEquivalent:  frequency.getMonthlyEquivalentDisplay(transaction.amount.amount)
     })
 
     return dto

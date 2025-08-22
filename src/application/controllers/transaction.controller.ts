@@ -72,16 +72,12 @@ export class TransactionController {
     @Query('type') type?: string,
     @Query('categoryId') categoryId?: string,
     @Query('frequency') frequency?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
   ) {
-    return this.transactionService.findAll(page, limit, type, categoryId, frequency, startDate, endDate)
+    return this.transactionService.findAll(page, limit, type, categoryId, frequency)
   }
 
   @Get('summary')
   @ApiOperation({ summary: 'Get transaction summary with totals' })
-  @ApiQuery({ name: 'startDate', required: false, type: String, description: 'Start date for summary (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'endDate', required: false, type: String, description: 'End date for summary (YYYY-MM-DD)' })
   @ApiResponse({
     status: 200,
     description: 'Summary retrieved successfully',
@@ -95,11 +91,8 @@ export class TransactionController {
       },
     },
   })
-  async getSummary(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.transactionService.getSummary(startDate, endDate)
+  async getSummary() {
+    return this.transactionService.getSummary()
   }
 
   @Get(':id')

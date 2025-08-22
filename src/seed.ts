@@ -1,6 +1,8 @@
 import { DataSource } from 'typeorm'
 import { Transaction } from './domain/entities/transaction.entity'
 import { Category } from './domain/entities/category.entity'
+import { FrequencyEnum } from './domain/value-objects/frequency.value-object'
+
 
 async function seed() {
   const nodeEnv = process.env.NODE_ENV || 'development'
@@ -71,38 +73,38 @@ async function seed() {
         const transactions = [
           {
             description: 'Monthly Salary',
-            amount: 5000.00,
-            date: new Date('2024-01-15'),
+            expression: '5000.00',
             categoryId: salaryCategory.id,
             notes: 'January 2024 salary',
-            userId: mockUserId
+            userId: mockUserId,
+            frequency: FrequencyEnum.MONTH
           },
           {
             description: 'Weekly Groceries',
-            amount: -150.75,
-            date: new Date('2024-01-14'),
+            expression: '-150.75',
             categoryId: groceriesCategory.id,
             notes: 'Weekly food shopping',
-            userId: mockUserId
+            userId: mockUserId,
+            frequency: FrequencyEnum.WEEK
           },
           {
             description: 'Electricity Bill',
-            amount: -89.50,
-            date: new Date('2024-01-13'),
+            expression: '-89.50',
             categoryId: utilitiesCategory.id,
             notes: 'December electricity bill',
-            userId: mockUserId
+            userId: mockUserId,
+            frequency: FrequencyEnum.TWO_MONTH
           }
         ]
 
         for (const transactionData of transactions) {
           const transaction = new Transaction(
             transactionData.description,
-            transactionData.amount,
-            transactionData.date,
+            transactionData.expression,
             transactionData.userId,
             transactionData.categoryId,
-            transactionData.notes
+            transactionData.notes,
+            transactionData.frequency
           )
           await transactionRepository.save(transaction)
         }

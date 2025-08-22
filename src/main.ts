@@ -195,8 +195,7 @@ async function runSeedTransactionsOnly(dataSource: DataSource): Promise<boolean>
     const transactions = [
       {
         description: 'Monthly Salary',
-        amount: 5000.00,
-        date: new Date('2024-01-15'),
+                    expression: '5000.00',
         categoryId: salaryCategory.id,
         notes: 'January 2024 salary',
         userId: mockUserId,
@@ -204,8 +203,7 @@ async function runSeedTransactionsOnly(dataSource: DataSource): Promise<boolean>
       },
       {
         description: 'Weekly Groceries',
-        amount: -150.75,
-        date: new Date('2024-01-14'),
+                    expression: '-150.75',
         categoryId: groceriesCategory.id,
         notes: 'Weekly food shopping',
         userId: mockUserId,
@@ -213,8 +211,7 @@ async function runSeedTransactionsOnly(dataSource: DataSource): Promise<boolean>
       },
       {
         description: 'Electricity Bill',
-        amount: -89.50,
-        date: new Date('2024-01-13'),
+                    expression: '-89.50',
         categoryId: utilitiesCategory.id,
         notes: 'December electricity bill',
         userId: mockUserId,
@@ -225,8 +222,7 @@ async function runSeedTransactionsOnly(dataSource: DataSource): Promise<boolean>
     for (const transactionData of transactions) {
       const transaction = new Transaction(
         transactionData.description,
-        transactionData.amount,
-        transactionData.date,
+        transactionData.expression,
         transactionData.userId,
         transactionData.categoryId,
         transactionData.notes,

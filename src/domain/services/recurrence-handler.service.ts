@@ -240,11 +240,12 @@ export class RecurrenceHandlerService {
    * Calculate the total amount for a recurring transaction over a period
    */
   calculateTotalAmount(
-    pattern: RecurrencePattern, 
-    amount: number, 
+    frequency: Frequency,
+    amount: number,
+    startDate: Date,
     endDate: Date
   ): number {
-    const occurrences = this.getOccurrenceCount(pattern, endDate)
+    const occurrences = this.getOccurrenceCount({ frequency, startDate, endDate }, endDate)
     return amount * occurrences
   }
 }

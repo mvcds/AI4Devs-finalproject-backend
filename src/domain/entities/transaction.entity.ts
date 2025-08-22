@@ -2,7 +2,6 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDa
 import { IsString, IsOptional, IsUUID, IsDate, IsNotEmpty, IsEnum } from 'class-validator'
 import { Category } from './category.entity'
 import { Money } from '../value-objects/money.value-object'
-import { TransactionType } from '../value-objects/transaction-type.value-object'
 import { FrequencyEnum } from '../value-objects/frequency.value-object'
 
 @Entity('transactions')
@@ -16,16 +15,10 @@ export class Transaction {
   @IsNotEmpty()
   description: string
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
-  @IsNotEmpty()
-  amount: number
-
-  // Type is inferred from amount: positive = income, negative/zero = expense
-
-  @Column({ type: 'date' })
-  @IsDate()
-  @IsNotEmpty()
-  date: Date
+            @Column({ type: 'text' })
+          @IsNotEmpty()
+          @IsString()
+          expression: string
 
   @ManyToOne(() => Category, category => category.transactions, { 
     nullable: false,
@@ -56,8 +49,6 @@ export class Transaction {
   @IsEnum(FrequencyEnum)
   frequency: FrequencyEnum
 
-
-
   @CreateDateColumn()
   @IsDate()
   createdAt: Date
@@ -66,55 +57,50 @@ export class Transaction {
   @IsDate()
   updatedAt: Date
 
-  constructor(
-    description: string,
-    amount: number,
-    date: Date,
-    userId: string,
-    categoryId: string,
-    notes?: string,
-    frequency?: FrequencyEnum
-  ) {
-    this.description = description
-    this.amount = amount
-    this.date = date
-    this.userId = userId
-    this.categoryId = categoryId
-    this.notes = notes
-    this.frequency = frequency || FrequencyEnum.MONTH
-  }
+            constructor(
+            description: string,
+            expression: string,
+            userId: string,
+            categoryId: string,
+            notes?: string,
+            frequency?: FrequencyEnum
+          ) {
+            this.description = description
+            this.expression = expression
+            this.userId = userId
+            this.categoryId = categoryId
+            this.notes = notes
+            this.frequency = frequency || FrequencyEnum.MONTH
+          }
 
-  getMoney(): Money {
-    return new Money(this.amount)
-  }
-
-  getTransactionType(): TransactionType {
-    return this.amount > 0 ? TransactionType.income() : TransactionType.expense()
-  }
+            /**
+           * Get the evaluated amount as a Money value object
+           * For simple expressions like "35" or "-12", this returns the Money object
+           * For complex expressions, this will need to be evaluated with transaction context
+           */
+          get amount(): Money {
+            return new Money(parseFloat(this.expression) || 0)
+          }
 
   isIncome(): boolean {
-    return this.amount > 0
+    return this.amount.amount > 0
   }
 
   isExpense(): boolean {
-    return this.amount <= 0
+    return this.amount.amount <= 0
   }
 
-  getAbsoluteAmount(): number {
-    return Math.abs(this.amount)
-  }
 
-  updateAmount(amount: number): void {
-    this.amount = amount
-  }
+            updateExpression(expression: string): void {
+            this.expression = expression
+          }
+
 
   updateDescription(description: string): void {
     this.description = description
   }
 
-  updateDate(date: Date): void {
-    this.date = date
-  }
+
 
   updateCategory(categoryId: string): void {
     this.categoryId = categoryId
@@ -127,8 +113,6 @@ export class Transaction {
   updateFrequency(frequency: FrequencyEnum): void {
     this.frequency = frequency
   }
-
-
 
   belongsToUser(userId: string): boolean {
     return this.userId === userId

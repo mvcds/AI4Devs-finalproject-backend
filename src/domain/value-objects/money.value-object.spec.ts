@@ -19,28 +19,7 @@ describe('Money', () => {
     })
   })
 
-  describe('properties', () => {
-    it('should correctly identify positive amounts', () => {
-      const positiveMoney = new Money(100.50)
-      expect(positiveMoney.isPositive).toBe(true)
-      expect(positiveMoney.isNegative).toBe(false)
-      expect(positiveMoney.isZero).toBe(false)
-    })
 
-    it('should correctly identify negative amounts', () => {
-      const negativeMoney = new Money(-100.50)
-      expect(negativeMoney.isPositive).toBe(false)
-      expect(negativeMoney.isNegative).toBe(true)
-      expect(negativeMoney.isZero).toBe(false)
-    })
-
-    it('should correctly identify zero amounts', () => {
-      const zeroMoney = new Money(0)
-      expect(zeroMoney.isPositive).toBe(false)
-      expect(zeroMoney.isNegative).toBe(false)
-      expect(zeroMoney.isZero).toBe(true)
-    })
-  })
 
   describe('arithmetic operations', () => {
     it('should add two Money instances with same decimals', () => {
@@ -117,23 +96,7 @@ describe('Money', () => {
     })
   })
 
-  describe('static methods', () => {
-    it('should create Money from string', () => {
-      const money = Money.fromString('100.50', 2)
-      expect(money.amount).toBe(100.50)
-      expect(money.decimals).toBe(2)
-    })
 
-    it('should throw error for invalid string', () => {
-      expect(() => Money.fromString('invalid')).toThrow('Invalid money string format')
-    })
-
-    it('should create zero Money', () => {
-      const zeroMoney = Money.zero(2)
-      expect(zeroMoney.amount).toBe(0)
-      expect(zeroMoney.decimals).toBe(2)
-    })
-  })
 
   describe('validation', () => {
     it('should accept valid amount range', () => {

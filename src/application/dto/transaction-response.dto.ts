@@ -1,95 +1,92 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 import { Expose, Transform } from 'class-transformer'
+import { FrequencyEnum } from '../../domain/value-objects/frequency.value-object'
 
 export class TransactionResponseDto {
   @ApiProperty({
     description: 'Transaction ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
   @Expose()
   id: string
 
   @ApiProperty({
     description: 'Transaction description',
-    example: 'Salary payment',
+    example: 'Monthly Salary'
   })
   @Expose()
   description: string
 
   @ApiProperty({
-    description: 'Transaction amount',
-    example: 1500.00,
+    description: 'Transaction expression',
+    example: '35'
+  })
+  @Expose()
+  expression: string
+
+  @ApiProperty({
+    description: 'Evaluated transaction amount',
+    example: 35
   })
   @Expose()
   amount: number
 
 
+  @ApiProperty({
+    description: 'Category ID',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @Expose()
+  categoryId: string
 
   @ApiProperty({
-    description: 'Transaction date',
-    example: '2024-01-15',
-  })
-  @Expose()
-  @Transform(({ value }) => value.toISOString().split('T')[0])
-  date: string
-
-  @ApiPropertyOptional({
-    description: 'Category ID',
-    example: '550e8400-e29b-41d4-a716-446655440001',
-  })
-  @Expose()
-  categoryId?: string
-
-  @ApiPropertyOptional({
     description: 'Category name',
-    example: 'Salary',
+    example: 'Salary'
   })
   @Expose()
   categoryName?: string
 
-  @ApiPropertyOptional({
-    description: 'Additional notes',
-    example: 'Monthly salary payment',
+  @ApiProperty({
+    description: 'Transaction notes',
+    example: 'January 2024 salary',
+    required: false
   })
   @Expose()
   notes?: string
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Transaction frequency',
-    example: 'month',
+    enum: FrequencyEnum,
+    example: FrequencyEnum.MONTH
   })
   @Expose()
-  frequency?: string
-
-
-
-  @ApiPropertyOptional({
-    description: 'Monthly equivalent amount for recurring transactions',
-    example: '500.00 per month',
-  })
-  @Expose()
-  monthlyEquivalent?: string
+  frequency: FrequencyEnum
 
   @ApiProperty({
     description: 'User ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
   @Expose()
   userId: string
 
   @ApiProperty({
-    description: 'Creation timestamp',
-    example: '2024-01-15T10:00:00.000Z',
+    description: 'Creation date',
+    example: '2024-01-15T10:00:00Z'
   })
   @Expose()
-  @Transform(({ value }) => value.toISOString())
   createdAt: Date
 
   @ApiProperty({
-    description: 'Last update timestamp',
-    example: '2024-01-15T10:00:00.000Z',
+    description: 'Last update date',
+    example: '2024-01-15T10:00:00Z'
   })
   @Expose()
-  @Transform(({ value }) => value.toISOString())
   updatedAt: Date
+
+  @ApiProperty({
+    description: 'Monthly equivalent amount for recurring transactions',
+    example: 35
+  })
+  @Expose()
+  monthlyEquivalent?: number
 }

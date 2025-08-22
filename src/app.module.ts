@@ -11,6 +11,8 @@ import { MockUserService } from './domain/services/mock-user.service'
 import { Transaction } from './domain/entities/transaction.entity'
 import { Category } from './domain/entities/category.entity'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -21,8 +23,8 @@ import { Category } from './domain/entities/category.entity'
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: [Transaction, Category],
-      synchronize: process.env.NODE_ENV !== 'production', // Enable in development and test
-      logging: process.env.NODE_ENV !== 'production',
+      synchronize: !isProduction,
+      migrationsRun: isProduction,
     }),
     TypeOrmModule.forFeature([Transaction, Category]),
   ],

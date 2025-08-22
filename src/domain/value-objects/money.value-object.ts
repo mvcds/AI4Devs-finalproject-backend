@@ -24,17 +24,7 @@ export class Money {
     return this._decimals
   }
 
-  get isPositive(): boolean {
-    return this._amount > 0
-  }
 
-  get isNegative(): boolean {
-    return this._amount < 0
-  }
-
-  get isZero(): boolean {
-    return this._amount === 0
-  }
 
   add(other: Money): Money {
     if (this._decimals !== other._decimals) {
@@ -81,15 +71,5 @@ export class Money {
     return Math.round(value * factor) / factor
   }
 
-  static fromString(value: string, decimals: number = 2): Money {
-    const amount = parseFloat(value)
-    if (isNaN(amount)) {
-      throw new Error('Invalid money string format')
-    }
-    return new Money(amount, decimals)
-  }
 
-  static zero(decimals: number = 2): Money {
-    return new Money(0, decimals)
-  }
 }
