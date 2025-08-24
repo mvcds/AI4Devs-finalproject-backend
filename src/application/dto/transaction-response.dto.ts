@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Expose, Transform } from 'class-transformer'
 import { FrequencyEnum } from '../../domain/value-objects/frequency.value-object'
+import { Expression } from '../../domain/value-objects/expression.value-object'
 
 export class TransactionResponseDto {
   @ApiProperty({
@@ -22,7 +23,7 @@ export class TransactionResponseDto {
     example: '35'
   })
   @Expose()
-  expression: string
+  expression: Expression
 
   @ApiProperty({
     description: 'Evaluated transaction amount',
