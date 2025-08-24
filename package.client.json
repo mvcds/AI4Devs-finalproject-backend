@@ -12,8 +12,7 @@
     "apis/**/*"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.package.json",
-    "prepublishOnly": "npm run build"
+    "build": "echo \"Already built\""
   },
   "keywords": [
     "api",

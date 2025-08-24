@@ -2,8 +2,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2023",
-    "outDir": "./dist",
-    "rootDir": "./src/generated",
+    "outDir": "./dist-generated",
+    "rootDir": "./generated",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -14,7 +14,7 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src/generated/**/*"
+    "./generated/**/*"
   ],
   "exclude": [
     "test/**/*",

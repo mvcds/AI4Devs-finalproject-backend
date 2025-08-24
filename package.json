@@ -23,16 +23,10 @@
     "db:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -d typeorm.config.ts",
     "db:show": "ts-node ./node_modules/typeorm/cli.js migration:show -d typeorm.config.ts",
     "db:seed": "ts-node src/seed.ts",
-    "swagger:generate": "curl http://backend:${BACKEND_PORT:-3000}/api-json > openapi.json",
-    "codegen:client": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o src/generated",
-    "codegen:package": "npm run swagger:generate && npm run codegen:client && npm run build:client && npm run prepare:client-package",
-    "build:client": "rm -rf dist && tsc -p tsconfig.package.json",
-    "prepare:client-package": "cp package.client.json dist/package.json && node -e \"const pkg=require('./dist/package.json'); pkg.scripts.build='echo \\\"Already built\\\"'; require('fs').writeFileSync('./dist/package.json', JSON.stringify(pkg, null, 2));\"",
-    "unpublish:client": "cd dist && npm unpublish ai4devs-api-client@$(node -e \"console.log(require('../package.client.json').version)\") --force || true",
-    "republish:client": "npm run codegen:package && cd dist && npm publish",
-    "register:publish": "npm run unpublish:client && npm run republish:client",
-    "register:unpublish": "cd dist && npm unpublish",
-    "publish:client": "npm run unpublish:client && npm run republish:client"
+    "client:generate": "curl http://backend:${BACKEND_PORT:-3000}/api-json > openapi.json && openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated",
+    "local:build": "npm run client:generate && rm -rf dist-generated && tsc -p tsconfig.client.json && cp package.client.json dist-generated/package.json",
+    "local:unpublish": "cd dist-generated && npm unpublish ai4devs-api-client@$(node -e \"console.log(require('../package.client.json').version)\") --registry http://verdaccio:4873 --force 2>/dev/null || true",
+    "local:publish": "npm run local:build && npm run local:unpublish && cd dist-generated && npm publish --registry http://verdaccio:4873 && rm -fr generated dist-generated"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
