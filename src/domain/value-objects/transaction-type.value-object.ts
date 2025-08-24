@@ -5,6 +5,7 @@ export enum TransactionTypeEnum {
   EXPENSE = 'expense',
 }
 
+
 export class TransactionType {
   @IsEnum(TransactionTypeEnum)
   private readonly _value: TransactionTypeEnum

@@ -1,7 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { IsString, IsOptional, IsUUID, IsDate, IsNotEmpty, IsEnum } from 'class-validator'
 import { Category } from './category.entity'
-import { Money } from '../value-objects/money.value-object'
 import { FrequencyEnum } from '../value-objects/frequency.value-object'
 import { Expression } from '../value-objects/expression.value-object'
 
@@ -74,44 +73,6 @@ export class Transaction {
     this.categoryId = categoryId
     this.notes = notes
     this.frequency = frequency || FrequencyEnum.MONTH
-  }
-
-    /**
-   * Get the evaluated amount as a Money value object
-   * For simple expressions like "35" or "-12", this returns the Money object
-   * For complex expressions, this will need to be evaluated with transaction context
-   */
-  get amount(): Money {
-    return new Money(this.expression.value)
-  }
-
-  isIncome(): boolean {
-    return this.amount.amount > 0
-  }
-
-  isExpense(): boolean {
-    return this.amount.amount <= 0
-  }
-
-
-  updateExpression(expression: string): void {
-    this.expression = new Expression(expression)
-  }
-
-  updateDescription(description: string): void {
-    this.description = description
-  }
-
-  updateCategory(categoryId: string): void {
-    this.categoryId = categoryId
-  }
-
-  updateNotes(notes: string): void {
-    this.notes = notes
-  }
-
-  updateFrequency(frequency: FrequencyEnum): void {
-    this.frequency = frequency
   }
 
   belongsToUser(userId: string): boolean {

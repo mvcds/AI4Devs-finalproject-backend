@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { Expose, Transform } from 'class-transformer'
+import { Expose } from 'class-transformer'
 import { FrequencyEnum } from '../../domain/value-objects/frequency.value-object'
 import { Expression } from '../../domain/value-objects/expression.value-object'
 
@@ -85,9 +85,10 @@ export class TransactionResponseDto {
   updatedAt: Date
 
   @ApiProperty({
-    description: 'Monthly equivalent amount for recurring transactions',
-    example: 35
+    description: 'Normalized amount (for preferred frequency, currency, etc)',
+    example: 35,
+    required: false
   })
   @Expose()
-  monthlyEquivalent?: number
+  normalizedAmount?: number
 }

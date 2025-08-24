@@ -7,7 +7,7 @@ export class MathEvaluatorService {
 
   evaluate(expression: string): number {
     try {
-      const cleanExpression = expression.replace(/\s/g, '')
+      const cleanExpression = (expression ?? '').toString().replace(/\s/g, '')
 
       const isMathematicalExpression = /^[\d+\-*/().,a-zA-Z\s]+$/.test(cleanExpression)
       

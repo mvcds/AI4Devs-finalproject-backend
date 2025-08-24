@@ -7,7 +7,7 @@ import { CreateTransactionDto } from '../dto/create-transaction.dto'
 import { UpdateTransactionDto } from '../dto/update-transaction.dto'
 import { TransactionResponseDto } from '../dto/transaction-response.dto'
 import { MockUserService } from '../../domain/services/mock-user.service'
-import { Frequency, FrequencyEnum } from '../../domain/value-objects/frequency.value-object'
+import { TransactionEvaluatorService } from '../../domain/services/transaction-evaluator.service'
 
 
 @Injectable()
@@ -18,6 +18,7 @@ export class TransactionService {
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
     private readonly mockUserService: MockUserService,
+    private readonly transactionEvaluatorService: TransactionEvaluatorService,
   ) {}
 
   async create(createTransactionDto: CreateTransactionDto): Promise<TransactionResponseDto> {
@@ -46,10 +47,11 @@ export class TransactionService {
     return this.mapToResponseDto(transactionWithCategory!)
   }
 
+  //TODO: we shouldn't have pagination for transactions
+  //in a different moment, we need to limit how many transactions a user can have, possibly remove the ones that were created last
   async findAll(
     page: number = 1,
     limit: number = 10,
-    type?: string,
     categoryId?: string,
     frequency?: string,
   ): Promise<{ transactions: TransactionResponseDto[]; total: number; page: number; limit: number }> {
@@ -60,14 +62,6 @@ export class TransactionService {
       .where('transaction.userId = :userId', { userId })
 
     // Apply filters
-    if (type) {
-      if (type === 'income') {
-        queryBuilder.andWhere('transaction.amount > 0')
-      } else if (type === 'expense') {
-        queryBuilder.andWhere('transaction.amount <= 0')
-      }
-    }
-
     if (categoryId) {
       queryBuilder.andWhere('transaction.categoryId = :categoryId', { categoryId })
     }
@@ -174,25 +168,21 @@ export class TransactionService {
       .createQueryBuilder('transaction')
       .where('transaction.userId = :userId', { userId })
 
-    // Get all transactions for this user and date range to calculate frequency-normalized amounts
+    // Get all transactions for this user to calculate frequency-normalized amounts
     const transactions = await queryBuilder.getMany()
     
     let totalIncome = 0
     let totalExpenses = 0
     
-    // Calculate frequency-normalized amounts
+    // Calculate frequency-normalized amounts using the transaction evaluator service
     for (const transaction of transactions) {
-      const frequencyValue = Object.values(FrequencyEnum).includes(transaction.frequency) 
-        ? transaction.frequency 
-        : FrequencyEnum.MONTH
+      const evaluation = this.transactionEvaluatorService.evaluate(transaction)
       
-      const frequency = new Frequency(frequencyValue)
-      const monthlyEquivalent = frequency.calculateMonthlyEquivalent(transaction.amount.amount)
-      
-      if (monthlyEquivalent > 0) {
-        totalIncome += monthlyEquivalent
+      if (evaluation.type === 'income') {
+        totalIncome += evaluation.normalizedAmount
       } else {
-        totalExpenses += Math.abs(monthlyEquivalent)
+        // For expenses, add the absolute value since expenses are negative
+        totalExpenses += Math.abs(evaluation.normalizedAmount)
       }
     }
 
@@ -221,16 +211,13 @@ export class TransactionService {
   private mapToResponseDto(transaction: Transaction): TransactionResponseDto {
     const dto = new TransactionResponseDto()
 
-    const frequencyValue = Object.values(FrequencyEnum).includes(transaction.frequency) 
-      ? transaction.frequency 
-      : FrequencyEnum.MONTH
-
-    const frequency = new Frequency(frequencyValue)
+    // Evaluate the transaction using the transaction evaluator service
+    const evaluation = this.transactionEvaluatorService.evaluate(transaction)
 
     Object.assign(dto, transaction, {
       categoryName: transaction.category?.name,
-      amount: transaction.amount.amount,
-      monthlyEquivalent:  frequency.getMonthlyEquivalentDisplay(transaction.amount.amount)
+      amount: evaluation.amount,
+      normalizedAmount: evaluation.normalizedAmount,
     })
 
     return dto

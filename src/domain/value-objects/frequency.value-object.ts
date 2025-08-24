@@ -33,7 +33,7 @@ export class Frequency {
    * @param amount - The original amount
    * @returns The monthly equivalent amount
    */
-  calculateMonthlyEquivalent(amount: number): number {
+  calculatenormalizedAmount(amount: number): number {
     switch (this._value) {
       case FrequencyEnum.DAILY:
         return amount * 30 // Approximate days in month
@@ -95,14 +95,14 @@ export class Frequency {
    * @param amount - The original amount
    * @returns Formatted string showing monthly equivalent
    */
-  getMonthlyEquivalentDisplay(amount: number): string {
+  getnormalizedAmountDisplay(amount: number): string {
     // Ensure amount is a number
     const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount
     if (isNaN(numericAmount)) {
       return '0.00 per month'
     }
     
-    const monthlyAmount = this.calculateMonthlyEquivalent(numericAmount)
+    const monthlyAmount = this.calculatenormalizedAmount(numericAmount)
     return `${monthlyAmount.toFixed(2)} per month`
   }
 
