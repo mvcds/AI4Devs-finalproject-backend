@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsString, IsOptional, IsUUID, IsNotEmpty, IsEnum, MaxLength, ValidateNested } from 'class-validator'
-import { Type } from 'class-transformer'
 import { FrequencyEnum } from '../../domain/value-objects/frequency.value-object'
-import { Expression } from '../../domain/value-objects/expression.value-object'
 
 export class CreateTransactionDto {
   @ApiProperty({

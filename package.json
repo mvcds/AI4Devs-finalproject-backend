@@ -23,7 +23,10 @@
     "db:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -d typeorm.config.ts",
     "db:show": "ts-node ./node_modules/typeorm/cli.js migration:show -d typeorm.config.ts",
     "db:seed": "ts-node src/seed.ts",
-    "client:generate": "curl http://backend:${BACKEND_PORT:-3000}/api-json > openapi.json && openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated",
+    "codegen:fetch": "curl http://localhost:${BACKEND_PORT:-3000}/api-json > openapi.json",
+    "codegen:execute": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated",
+    "codegen:extend": "cp src/application/dto/validation.utils.ts generated/ && echo 'export * from \"./validation.utils\";' >> generated/index.ts",
+    "client:generate": "npm run codegen:fetch && npm run codegen:execute && npm run codegen:extend",
     "local:build": "npm run client:generate && rm -rf dist-generated && tsc -p tsconfig.client.json && cp package.client.json dist-generated/package.json",
     "local:unpublish": "cd dist-generated && npm unpublish ai4devs-api-client@$(node -e \"console.log(require('../package.client.json').version)\") --registry http://verdaccio:4873 --force 2>/dev/null || true",
     "local:publish": "npm run local:build && npm run local:unpublish && cd dist-generated && npm publish --registry http://verdaccio:4873 && rm -fr generated dist-generated"
