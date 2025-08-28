@@ -23,7 +23,7 @@
     "db:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -d typeorm.config.ts",
     "db:show": "ts-node ./node_modules/typeorm/cli.js migration:show -d typeorm.config.ts",
     "db:seed": "ts-node src/seed.ts",
-    "codegen:fetch": "curl http://localhost:${BACKEND_PORT:-3000}/api-json > openapi.json",
+    "codegen:fetch": "curl http://backend:${BACKEND_PORT:-3000}/api-json > openapi.json",
     "codegen:execute": "openapi-generator-cli generate -i openapi.json -g typescript-fetch -o generated",
     "codegen:extend": "cp src/application/dto/validation.utils.ts generated/ && echo 'export * from \"./validation.utils\";' >> generated/index.ts",
     "client:generate": "npm run codegen:fetch && npm run codegen:execute && npm run codegen:extend",
