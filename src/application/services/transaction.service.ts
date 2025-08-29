@@ -8,6 +8,7 @@ import { UpdateTransactionDto } from '../dto/update-transaction.dto'
 import { TransactionResponseDto } from '../dto/transaction-response.dto'
 import { MockUserService } from '../../domain/services/mock-user.service'
 import { TransactionEvaluatorService } from '../../domain/services/transaction-evaluator.service'
+import { TransactionSummaryDto } from '../dto/transaction-summary.dto'
 
 
 @Injectable()
@@ -162,7 +163,7 @@ export class TransactionService {
     await this.transactionRepository.remove(transaction)
   }
 
-  async getSummary(): Promise<{ totalIncome: number; totalExpenses: number; netAmount: number; transactionCount: number }> {
+  async getSummary(): Promise<TransactionSummaryDto> {
     const userId = this.mockUserService.getCurrentUserId()
     const queryBuilder = this.transactionRepository
       .createQueryBuilder('transaction')
@@ -192,7 +193,7 @@ export class TransactionService {
       totalIncome: Math.round(totalIncome * 100) / 100, // Round to 2 decimal places
       totalExpenses: Math.round(totalExpenses * 100) / 100,
       netAmount: Math.round(netAmount * 100) / 100,
-      transactionCount: transactions.length,
+      count: transactions.length,
     }
   }
 
