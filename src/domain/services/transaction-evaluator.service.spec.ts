@@ -31,90 +31,90 @@ describe('TransactionEvaluatorService', () => {
   })
 
   describe('evaluate(transaction)', () => {
-    it('income: positive amount, monthly normalization unchanged', () => {
+    it('income: positive amount, monthly normalization unchanged', async () => {
       const tx = makeTx('salary', '1000', FrequencyEnum.MONTH)
-      jest.spyOn(mathEvaluatorService, 'evaluate').mockReturnValue(1000)
+      jest.spyOn(mathEvaluatorService, 'evaluate').mockResolvedValue(1000)
 
-      const result = service.evaluate(tx)
+      const result = await service.evaluate(tx)
       expect(result.amount).toBe(1000)
       expect(result.type).toBe(TransactionTypeEnum.INCOME)
       expect(result.normalizedAmount).toBe(1000)
     })
 
-    it('expense: negative amount, monthly normalization preserves sign', () => {
+    it('expense: negative amount, monthly normalization preserves sign', async () => {
       const tx = makeTx('rent', '-500', FrequencyEnum.MONTH)
-      jest.spyOn(mathEvaluatorService, 'evaluate').mockReturnValue(-500)
+      jest.spyOn(mathEvaluatorService, 'evaluate').mockResolvedValue(-500)
 
-      const result = service.evaluate(tx)
+      const result = await service.evaluate(tx)
       expect(result.amount).toBe(-500) // Now preserving the sign
       expect(result.type).toBe(TransactionTypeEnum.EXPENSE)
       expect(result.normalizedAmount).toBe(-500) // Normalized amount preserves the sign
     })
 
-    it('weekly normalization multiplies by ~4.33', () => {
+    it('weekly normalization multiplies by ~4.33', async () => {
       const tx = makeTx('groceries', '100', FrequencyEnum.WEEK)
-      jest.spyOn(mathEvaluatorService, 'evaluate').mockReturnValue(100)
+      jest.spyOn(mathEvaluatorService, 'evaluate').mockResolvedValue(100)
 
-      const result = service.evaluate(tx)
+      const result = await service.evaluate(tx)
       expect(result.amount).toBe(100)
       expect(result.type).toBe(TransactionTypeEnum.INCOME)
       expect(result.normalizedAmount).toBeCloseTo(100 * 4.33, 2)
     })
 
-    it('yearly normalization divides by 12', () => {
+    it('yearly normalization divides by 12', async () => {
       const tx = makeTx('bonus', '12000', FrequencyEnum.YEAR)
-      jest.spyOn(mathEvaluatorService, 'evaluate').mockReturnValue(12000)
+      jest.spyOn(mathEvaluatorService, 'evaluate').mockResolvedValue(12000)
 
-      const result = service.evaluate(tx)
+      const result = await service.evaluate(tx)
       expect(result.amount).toBe(12000)
       expect(result.type).toBe(TransactionTypeEnum.INCOME)
       expect(result.normalizedAmount).toBe(1000)
     })
 
-    it('zero treated as expense with zero normalization', () => {
+    it('zero treated as expense with zero normalization', async () => {
       const tx = makeTx('zero', '0', FrequencyEnum.MONTH)
-      jest.spyOn(mathEvaluatorService, 'evaluate').mockReturnValue(0)
+      jest.spyOn(mathEvaluatorService, 'evaluate').mockResolvedValue(0)
 
-      const result = service.evaluate(tx)
+      const result = await service.evaluate(tx)
       expect(result.amount).toBe(0)
       expect(result.type).toBe(TransactionTypeEnum.EXPENSE)
       expect(result.normalizedAmount).toBe(0)
     })
 
-    it('throws when math evaluation fails', () => {
+    it('throws when math evaluation fails', async () => {
       const tx = makeTx('invalid', 'invalid', FrequencyEnum.MONTH)
       jest.spyOn(mathEvaluatorService, 'evaluate').mockImplementation(() => {
         throw new Error('Invalid expression')
       })
 
-      expect(() => service.evaluate(tx)).toThrow('Cannot evaluate transaction expression: Invalid expression')
+      await expect(service.evaluate(tx)).rejects.toThrow('Cannot evaluate transaction expression: Invalid expression')
     })
 
-    it('handles complex expressions', () => {
+    it('handles complex expressions', async () => {
       const tx = makeTx('complex', '1000 + 500 - 200 * 2', FrequencyEnum.MONTH)
-      jest.spyOn(mathEvaluatorService, 'evaluate').mockReturnValue(1100)
+      jest.spyOn(mathEvaluatorService, 'evaluate').mockResolvedValue(1100)
 
-      const result = service.evaluate(tx)
+      const result = await service.evaluate(tx)
       expect(result.amount).toBe(1100)
       expect(result.type).toBe(TransactionTypeEnum.INCOME)
       expect(result.normalizedAmount).toBe(1100)
     })
 
-    it('handles decimals', () => {
+    it('handles decimals', async () => {
       const tx = makeTx('decimal', '99.99', FrequencyEnum.MONTH)
-      jest.spyOn(mathEvaluatorService, 'evaluate').mockReturnValue(99.99)
+      jest.spyOn(mathEvaluatorService, 'evaluate').mockResolvedValue(99.99)
 
-      const result = service.evaluate(tx)
+      const result = await service.evaluate(tx)
       expect(result.amount).toBe(99.99)
       expect(result.type).toBe(TransactionTypeEnum.INCOME)
       expect(result.normalizedAmount).toBe(99.99)
     })
 
-    it('handles very large amounts', () => {
+    it('handles very large amounts', async () => {
       const tx = makeTx('large', '999999.99', FrequencyEnum.MONTH)
-      jest.spyOn(mathEvaluatorService, 'evaluate').mockReturnValue(999999.99)
+      jest.spyOn(mathEvaluatorService, 'evaluate').mockResolvedValue(999999.99)
 
-      const result = service.evaluate(tx)
+      const result = await service.evaluate(tx)
       expect(result.amount).toBe(999999.99)
       expect(result.type).toBe(TransactionTypeEnum.INCOME)
       expect(result.normalizedAmount).toBe(999999.99)

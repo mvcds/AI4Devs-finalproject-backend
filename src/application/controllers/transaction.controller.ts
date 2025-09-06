@@ -6,6 +6,7 @@ import { UpdateTransactionDto } from '../dto/update-transaction.dto'
 import { TransactionResponseDto } from '../dto/transaction-response.dto'
 import { ExpressionResult } from '../dto/expression-result.dto'
 import { MathEvaluatorService } from '../../domain/services/math-evaluator.service'
+import { MockUserService } from '../../domain/services/mock-user.service'
 import { Frequency, FrequencyEnum } from '../../domain/value-objects/frequency.value-object'
 import { TransactionSummaryDto } from '../dto/transaction-summary.dto'
 
@@ -15,6 +16,7 @@ export class TransactionController {
   constructor(
     private readonly transactionService: TransactionService,
     private readonly mathEvaluatorService: MathEvaluatorService,
+    private readonly mockUserService: MockUserService,
   ) {}
 
   @Post()
@@ -66,7 +68,8 @@ export class TransactionController {
     @Query('expression') expression: string,
     @Query('frequency') frequency: string
   ): Promise<ExpressionResult> {
-    const amount = this.mathEvaluatorService.evaluate(expression)
+    const userId = this.mockUserService.getCurrentUserId()
+    const amount = await this.mathEvaluatorService.evaluate(expression, userId)
     const type = amount > 0 ? 'income' : 'expense'
     
     // Calculate normalized amount based on frequency

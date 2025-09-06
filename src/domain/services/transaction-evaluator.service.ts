@@ -16,9 +16,9 @@ export class TransactionEvaluatorService {
 
   constructor(private readonly mathEvaluatorService: MathEvaluatorService) {}
 
-  evaluate(transaction: Transaction): TransactionEvaluationResult {
+  async evaluate(transaction: Transaction): Promise<TransactionEvaluationResult> {
     try {
-      const raw = this.mathEvaluatorService.evaluate(transaction.expression.toString())
+      const raw = await this.mathEvaluatorService.evaluate(transaction.expression.toString(), transaction.userId)
       const amount = Number.isFinite(raw) ? raw : 0
       
       const type = amount > 0 ? TransactionTypeEnum.INCOME : TransactionTypeEnum.EXPENSE

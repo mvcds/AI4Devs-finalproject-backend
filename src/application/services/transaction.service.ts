@@ -30,6 +30,9 @@ export class TransactionService {
       await this.validateCategory(createTransactionDto.categoryId)
     }
 
+    // Validate expression doesn't reference itself (for new transactions, this will be empty)
+    await this.validateExpressionSelfReference(createTransactionDto.expression, null)
+
     const transaction = new Transaction(
       createTransactionDto.description,
       createTransactionDto.expression,
@@ -45,7 +48,7 @@ export class TransactionService {
       where: { id: savedTransaction.id },
       relations: ['category'],
     })
-    return this.mapToResponseDto(transactionWithCategory!)
+    return await this.mapToResponseDto(transactionWithCategory!)
   }
 
   //TODO: we shouldn't have pagination for transactions
@@ -81,7 +84,7 @@ export class TransactionService {
     const [transactions, total] = await queryBuilder.getManyAndCount()
 
     return {
-      transactions: transactions.map(transaction => this.mapToResponseDto(transaction)),
+      transactions: await Promise.all(transactions.map(transaction => this.mapToResponseDto(transaction))),
       total,
       page,
       limit,
@@ -99,7 +102,7 @@ export class TransactionService {
       throw new NotFoundException(`Transaction with ID ${id} not found`)
     }
 
-    return this.mapToResponseDto(transaction)
+    return await this.mapToResponseDto(transaction)
   }
 
   async update(id: string, updateTransactionDto: UpdateTransactionDto): Promise<TransactionResponseDto> {
@@ -116,6 +119,11 @@ export class TransactionService {
     // Validate category if provided
     if (updateTransactionDto.categoryId) {
       await this.validateCategory(updateTransactionDto.categoryId)
+    }
+
+    // Validate expression doesn't reference itself if expression is being updated
+    if (updateTransactionDto.expression !== undefined) {
+      await this.validateExpressionSelfReference(updateTransactionDto.expression, id)
     }
 
     // Use update method to ensure all fields are properly updated
@@ -147,7 +155,7 @@ export class TransactionService {
       throw new NotFoundException(`Transaction with ID ${id} not found after update`)
     }
     
-    return this.mapToResponseDto(updatedTransaction)
+    return await this.mapToResponseDto(updatedTransaction)
   }
 
   async remove(id: string): Promise<void> {
@@ -177,7 +185,7 @@ export class TransactionService {
     
     // Calculate frequency-normalized amounts using the transaction evaluator service
     for (const transaction of transactions) {
-      const evaluation = this.transactionEvaluatorService.evaluate(transaction)
+      const evaluation = await this.transactionEvaluatorService.evaluate(transaction)
       
       if (evaluation.type === 'income') {
         totalIncome += evaluation.normalizedAmount
@@ -209,11 +217,28 @@ export class TransactionService {
     }
   }
 
-  private mapToResponseDto(transaction: Transaction): TransactionResponseDto {
+  private async validateExpressionSelfReference(expression: string, transactionId: string | null): Promise<void> {
+    if (!expression || !transactionId) {
+      return // No validation needed for new transactions or if no expression
+    }
+
+    // Check if expression contains a reference to itself
+    const transactionReferenceRegex = /\$([a-zA-Z0-9-]+)/g
+    const matches = Array.from(expression.matchAll(transactionReferenceRegex))
+    
+    for (const match of matches) {
+      const referencedTransactionId = match[1]
+      if (referencedTransactionId === transactionId) {
+        throw new BadRequestException('Transaction cannot reference itself in its expression')
+      }
+    }
+  }
+
+  private async mapToResponseDto(transaction: Transaction): Promise<TransactionResponseDto> {
     const dto = new TransactionResponseDto()
 
     // Evaluate the transaction using the transaction evaluator service
-    const evaluation = this.transactionEvaluatorService.evaluate(transaction)
+    const evaluation = await this.transactionEvaluatorService.evaluate(transaction)
 
     Object.assign(dto, transaction, {
       categoryName: transaction.category?.name,
