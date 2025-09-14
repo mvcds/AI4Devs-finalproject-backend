@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Category } from '../../domain/entities/category.entity'
+import { Transaction } from '../../domain/entities/transaction.entity'
 import { CreateCategoryDto } from '../dto/create-category.dto'
 import { UpdateCategoryDto } from '../dto/update-category.dto'
 
@@ -10,6 +11,8 @@ export class CategoryService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(Transaction)
+    private readonly transactionRepository: Repository<Transaction>,
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
@@ -18,7 +21,6 @@ export class CategoryService {
       createCategoryDto.flow,
       createCategoryDto.color,
       createCategoryDto.description,
-      createCategoryDto.parentId,
     )
     return this.categoryRepository.save(category)
   }
@@ -52,15 +54,24 @@ export class CategoryService {
     if (updateCategoryDto.description !== undefined) {
       category.updateDescription(updateCategoryDto.description)
     }
-    if (updateCategoryDto.parentId !== undefined) {
-      category.updateParent(updateCategoryDto.parentId)
-    }
 
     return this.categoryRepository.save(category)
   }
 
   async remove(id: string): Promise<void> {
     const category = await this.findOne(id)
+    
+    // Check if there are any transactions using this category
+    const transactionCount = await this.transactionRepository.count({
+      where: { categoryId: id }
+    })
+    
+    if (transactionCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete category "${category.name}" because it is being used by ${transactionCount} transaction(s). Please reassign or delete those transactions first.`
+      )
+    }
+    
     await this.categoryRepository.remove(category)
   }
 }

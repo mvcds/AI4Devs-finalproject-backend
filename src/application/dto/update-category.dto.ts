@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsOptional, IsString, IsEnum, IsUUID } from 'class-validator'
+import { IsOptional, IsString, IsEnum } from 'class-validator'
 import { CategoryFlow } from '../../domain/entities/category.entity'
 
 export class UpdateCategoryDto {
@@ -40,12 +40,4 @@ export class UpdateCategoryDto {
   @IsString()
   description?: string
 
-  @ApiProperty({
-    description: 'Parent category ID for hierarchical categories',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: false
-  })
-  @IsOptional()
-  @IsUUID()
-  parentId?: string
 }
