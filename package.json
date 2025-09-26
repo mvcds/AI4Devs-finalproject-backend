@@ -28,8 +28,8 @@
     "codegen:extend": "cp src/application/dto/validation.utils.ts generated/ && echo 'export * from \"./validation.utils\";' >> generated/index.ts",
     "client:generate": "npm run codegen:fetch && npm run codegen:execute && npm run codegen:extend",
     "local:build": "npm run client:generate && rm -rf dist-generated && tsc -p tsconfig.client.json && cp package.client.json dist-generated/package.json",
-    "local:unpublish": "cd dist-generated && npm unpublish ai4devs-api-client@$(node -e \"console.log(require('../package.client.json').version)\") --registry http://verdaccio:4873 --force 2>/dev/null || true",
-    "local:publish": "npm run local:build && npm run local:unpublish && cd dist-generated && npm publish --registry http://verdaccio:4873 && rm -fr generated dist-generated"
+    "local:unpublish": "mkdir -p dist-generated && cd dist-generated && npm unpublish ai4devs-api-client@$(node -e \"console.log(require('../package.client.json').version)\") --registry http://verdaccio:4873 --force 2>/dev/null || true",
+    "local:publish": "npm run local:build && npm run local:unpublish && mkdir -p dist-generated && cd dist-generated && npm publish --registry http://verdaccio:4873 && rm -fr generated dist-generated"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
