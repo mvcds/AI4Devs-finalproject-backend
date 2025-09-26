@@ -9,6 +9,7 @@ import { MathEvaluatorService } from '../../domain/services/math-evaluator.servi
 import { MockUserService } from '../../domain/services/mock-user.service'
 import { Frequency, FrequencyEnum } from '../../domain/value-objects/frequency.value-object'
 import { TransactionSummaryDto } from '../dto/transaction-summary.dto'
+import { BudgetPercentagesDto } from '../dto/budget-percentages.dto'
 
 @ApiTags('transactions')
 @Controller('api/transactions')
@@ -40,6 +41,13 @@ export class TransactionController {
   @ApiResponse({ status: 200, description: 'Summary retrieved successfully', type: TransactionSummaryDto })
   async getSummary(): Promise<TransactionSummaryDto> {
     return this.transactionService.getSummary()
+  }
+
+  @Get('budget-percentages')
+  @ApiOperation({ summary: 'Get budget percentages by category and flow' })
+  @ApiResponse({ status: 200, description: 'Budget percentages retrieved successfully', type: BudgetPercentagesDto })
+  async getBudgetPercentages(): Promise<BudgetPercentagesDto> {
+    return this.transactionService.getBudgetPercentages()
   }
 
   @Get('evaluate-expression')

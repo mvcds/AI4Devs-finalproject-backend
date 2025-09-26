@@ -9,6 +9,8 @@ import { TransactionResponseDto } from '../dto/transaction-response.dto'
 import { MockUserService } from '../../domain/services/mock-user.service'
 import { TransactionEvaluatorService } from '../../domain/services/transaction-evaluator.service'
 import { TransactionSummaryDto } from '../dto/transaction-summary.dto'
+import { BudgetPercentagesDto, CategoryPercentageDto, FlowPercentageDto } from '../dto/budget-percentages.dto'
+import { CategoryFlow } from '../../domain/entities/category.entity'
 
 
 @Injectable()
@@ -202,6 +204,89 @@ export class TransactionService {
       totalExpenses: Math.round(totalExpenses * 100) / 100,
       netAmount: Math.round(netAmount * 100) / 100,
       count: transactions.length,
+    }
+  }
+
+  async getBudgetPercentages(): Promise<BudgetPercentagesDto> {
+    const userId = this.mockUserService.getCurrentUserId()
+    
+    // Get all transactions with their categories
+    const transactions = await this.transactionRepository
+      .createQueryBuilder('transaction')
+      .leftJoinAndSelect('transaction.category', 'category')
+      .where('transaction.userId = :userId', { userId })
+      .getMany()
+
+    if (transactions.length === 0) {
+      return {
+        categoryPercentages: [],
+        flowPercentages: [],
+        totalAmount: 0
+      }
+    }
+
+    // Calculate normalized amounts and group by category
+    const categoryAmounts = new Map<string, { name: string, color: string, flow: CategoryFlow, amount: number }>()
+    const flowAmounts = new Map<CategoryFlow, number>()
+    let totalAmount = 0
+
+    for (const transaction of transactions) {
+      const evaluation = await this.transactionEvaluatorService.evaluate(transaction)
+      const normalizedAmount = Math.abs(evaluation.normalizedAmount)
+      
+      if (normalizedAmount > 0) {
+        const category = transaction.category
+        const categoryId = category.id
+        
+        // Update category amounts
+        if (categoryAmounts.has(categoryId)) {
+          categoryAmounts.get(categoryId)!.amount += normalizedAmount
+        } else {
+          categoryAmounts.set(categoryId, {
+            name: category.name,
+            color: category.color || '#6B7280',
+            flow: category.flow,
+            amount: normalizedAmount
+          })
+        }
+        
+        // Update flow amounts
+        if (flowAmounts.has(category.flow)) {
+          flowAmounts.set(category.flow, flowAmounts.get(category.flow)! + normalizedAmount)
+        } else {
+          flowAmounts.set(category.flow, normalizedAmount)
+        }
+        
+        totalAmount += normalizedAmount
+      }
+    }
+
+    // Calculate percentages
+    const categoryPercentages: CategoryPercentageDto[] = Array.from(categoryAmounts.entries()).map(([categoryId, data]) => ({
+      categoryId,
+      categoryName: data.name,
+      categoryColor: data.color,
+      flow: data.flow,
+      percentage: totalAmount > 0 ? Math.round((data.amount / totalAmount) * 100 * 10) / 10 : 0,
+      amount: Math.round(data.amount * 100) / 100
+    }))
+
+    const flowPercentages: FlowPercentageDto[] = Array.from(flowAmounts.entries()).map(([flow, amount]) => ({
+      flow,
+      percentage: totalAmount > 0 ? Math.round((amount / totalAmount) * 100 * 10) / 10 : 0,
+      amount: Math.round(amount * 100) / 100
+    }))
+
+    // Sort categories by amount (descending)
+    categoryPercentages.sort((a, b) => b.amount - a.amount)
+    
+    // Sort flows by amount (descending)
+    flowPercentages.sort((a, b) => b.amount - a.amount)
+
+    return {
+      categoryPercentages,
+      flowPercentages,
+      totalAmount: Math.round(totalAmount * 100) / 100
     }
   }
 
